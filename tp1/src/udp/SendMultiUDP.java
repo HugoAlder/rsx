@@ -13,7 +13,7 @@ public class SendMultiUDP {
 	public static void main(String[] args) throws IOException {
 		
 		int port = 7654;
-		InetAddress groupAddress = InetAddress.getByName("224.0.0.1");
+		InetAddress groupAddress = InetAddress.getByName("224.0.0.2");
 		MulticastSocket socket = new MulticastSocket(port);
 		socket.joinGroup(groupAddress);
 		
