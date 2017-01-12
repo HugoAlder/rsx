@@ -6,38 +6,39 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.NetworkInterface;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.Scanner;
 
 public class ChatCode {
 
+	private final static int PORT = 7654;
+	private final static String USERNAME = "Hugo";
+	private final static String ADDRESS = "224.0.0.2";
+	
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException {
 
-		int port = 7654;
-		String address = "224.0.0.2";
-		InetAddress groupAddress = InetAddress.getByName(address);
-		MulticastSocket socket = new MulticastSocket(port);
+		InetAddress groupAddress = InetAddress.getByName(ADDRESS);
+		MulticastSocket socket = new MulticastSocket(PORT);
 		socket.joinGroup(groupAddress);
 
 		Thread sender = new Thread() {
 			public void run() {
 
-				System.out.println("Server started");
-				
+				System.out.println("Server status : online");			
 				String message = "";
 				Scanner scan = new Scanner(System.in);
+				
 				while (true) {
 					byte[] data = new byte[1024];
 					message += scan.nextLine();
 
 					// Encodage
 					message = code(message, getKey());
+					String finalMessage = getKey() + ":" + USERNAME + ":" + message;
+					data = finalMessage.getBytes();
 
-					data = message.getBytes();
-
-					DatagramPacket packet = new DatagramPacket(data, data.length, groupAddress, port);
+					DatagramPacket packet = new DatagramPacket(data, data.length, groupAddress, PORT);
 					message = "";
 					try {
 						socket.send(packet);
@@ -62,10 +63,10 @@ public class ChatCode {
 					}
 
 					// Decodage
-					String tmp = decode(new String(data, 0, packet.getLength()), getKey());
-
-					String message = packet.getAddress().getHostName() + " " + tmp;
+					String tmp = new String(data, 0, packet.getLength());
+					String message = getMessage(tmp);
 					System.out.println(message);
+					
 					data = new byte[1024];
 				}
 			}
@@ -98,7 +99,6 @@ public class ChatCode {
 	
 	public static String getMacAddress() {
 		try {
-			InetAddress address = InetAddress.getLocalHost();
 			Enumeration<NetworkInterface> network = NetworkInterface.getNetworkInterfaces();
 			while (network.hasMoreElements()) {
 				NetworkInterface ni = network.nextElement();
@@ -111,7 +111,7 @@ public class ChatCode {
 					return res;
 				}
 			}
-		} catch (UnknownHostException | SocketException e1) {
+		} catch (SocketException e1) {
 			e1.printStackTrace();
 		}
 		return null;
@@ -121,6 +121,18 @@ public class ChatCode {
 		String macAddress = getMacAddress();
 		String[] tab = macAddress.split("-");
 		return Integer.parseInt(tab[tab.length - 1], 16);
+	}
+	
+	public static String getMessage(String s) {
+		String[] tab = s.split(":");
+		if(tab.length != 3) {
+			return "Error : wrong message format";
+		}
+		int key = Integer.parseInt(tab[0]);
+		String username = tab[1];
+		String message = decode(tab[2], key);
+		String display = username + " : " + message;
+		return display;
 	}
 
 }
