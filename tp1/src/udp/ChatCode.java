@@ -14,7 +14,7 @@ public class ChatCode {
 	private final static int PORT = 7654;
 	private final static String USERNAME = "Hugo";
 	private final static String ADDRESS = "224.0.0.2";
-	
+
 	@SuppressWarnings("resource")
 	public static void main(String[] args) throws IOException {
 
@@ -25,10 +25,10 @@ public class ChatCode {
 		Thread sender = new Thread() {
 			public void run() {
 
-				System.out.println("Server status : online");			
+				System.out.println("Server status : online");
 				String message = "";
 				Scanner scan = new Scanner(System.in);
-				
+
 				while (true) {
 					byte[] data = new byte[1024];
 					message += scan.nextLine();
@@ -66,7 +66,7 @@ public class ChatCode {
 					String tmp = new String(data, 0, packet.getLength());
 					String message = getMessage(tmp);
 					System.out.println(message);
-					
+
 					data = new byte[1024];
 				}
 			}
@@ -96,7 +96,7 @@ public class ChatCode {
 		}
 		return res;
 	}
-	
+
 	public static String getMacAddress() {
 		try {
 			Enumeration<NetworkInterface> network = NetworkInterface.getNetworkInterfaces();
@@ -116,22 +116,23 @@ public class ChatCode {
 		}
 		return null;
 	}
-	
+
 	public static int getKey() {
 		String macAddress = getMacAddress();
 		String[] tab = macAddress.split("-");
 		return Integer.parseInt(tab[tab.length - 1], 16);
 	}
-	
+
 	public static String getMessage(String s) {
 		String[] tab = s.split(":");
-		if(tab.length != 3) {
-			return "Error : wrong message format";
-		}
 		int key = Integer.parseInt(tab[0]);
 		String username = tab[1];
-		String message = decode(tab[2], key);
-		String display = username + " : " + message;
+		String message = "";
+		for (int i = 2; i < tab.length; i++) {
+			message += tab[i];
+		}
+		String messageDecode = decode(message, key);
+		String display = username + " : " + messageDecode;
 		return display;
 	}
 
