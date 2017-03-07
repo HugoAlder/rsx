@@ -1,3 +1,4 @@
+#include <string.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <stdio.h>
@@ -8,30 +9,40 @@
 
 int main(int argc, char ** argv) {
 
-  struct sockaddr_in myaddr = { 0 };
-  int sockfd, mes_len;
+  struct sockaddr_in dest;
+  int sockfd, mes_len, status;
   char * mes;
+
+  if(argc != 2) {
+    printf("Mauvais nombre d'arguments\n");
+  }
 
   /* Structure sockaddr_in */
 
-  myaddr.sin_family = AF_INET;
-  myaddr.sin_port = 7654;
-  myaddr.sin_addr.s_addr = inet_addr("224.0.0.1");
+  memset(&dest, 0, sizeof(dest));
+  dest.sin_family = AF_INET;
+  dest.sin_port = htons(7654);
+  dest.sin_addr.s_addr = inet_addr("127.0.0.1");
 
   /* Création de la socket */
 
-  sockfd = socket(AF_INET, SOCK_STREAM, 0);
+  sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if(sockfd == -1) {
     perror("socket: ");
     return -1;
   }
 
   mes = argv[1];
-  mes_len = sizeof(mes);
+  mes_len = strlen(mes);
+  printf("%s\n", mes);
 
   /* Envoi du messasge */
 
-  sendto(sockfd, mes, mes_len, 0, (struct sockaddr*) &myaddr, sizeof(myaddr));
+  status = sendto(sockfd, mes, mes_len, 0, (struct sockaddr *) &dest, sizeof(dest));
+  if(status == -1) {
+    printf("Erreur sendto\n");
+    return -1;
+  }
 
   return 0;
 }
